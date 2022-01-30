@@ -17,12 +17,15 @@ public:
         Expanded
     };
 
-    explicit Painter(QObject *parent = nullptr);    
+    explicit Painter(QObject *parent = nullptr);
+
+    void paint(QPainter *painter);
 
     QSize size() const;
     void setSize(const QSize &newSize);
 
-    void paint(QPainter *painter);
+    const Qt::Alignment &alignment() const;
+    void setAlignment(const Qt::Alignment &newAlignment);
 
 private:
     QSize _size = QSize(300, 200);

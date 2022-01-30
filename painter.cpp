@@ -9,16 +9,6 @@ Painter::Painter(QObject *parent) : QObject(parent)
 {
 }
 
-QSize Painter::size() const
-{
-    return _size;
-}
-
-void Painter::setSize(const QSize &newSize)
-{
-    _size = newSize;
-}
-
 void Painter::paint(QPainter *painter)
 {
     painter->save();
@@ -34,4 +24,24 @@ void Painter::paint(QPainter *painter)
     painter->drawText(mainRect, _alignment, text);
 
     painter->restore();
+}
+
+QSize Painter::size() const
+{
+    return _size;
+}
+
+void Painter::setSize(const QSize &newSize)
+{
+    _size = newSize;
+}
+
+const Qt::Alignment &Painter::alignment() const
+{
+    return _alignment;
+}
+
+void Painter::setAlignment(const Qt::Alignment &newAlignment)
+{
+    _alignment = newAlignment;
 }
