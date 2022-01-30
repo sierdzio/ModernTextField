@@ -1,0 +1,22 @@
+QT = core gui widgets qml quick quickwidgets
+
+HEADERS = mainwindow.h \
+    moderntextfield.h \
+    moderntextfieldwidget.h \
+    painter.h
+
+SOURCES = main.cpp \
+    mainwindow.cpp \
+    moderntextfield.cpp \
+    moderntextfieldwidget.cpp \
+    painter.cpp
+
+FORMS = mainwindow.ui
+
+RESOURCES += \
+    qml.qrc
+
+CONFIG += qmltypes
+QML_IMPORT_NAME = ModernFields
+QML_IMPORT_MAJOR_VERSION = 1
+
