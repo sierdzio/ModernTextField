@@ -26,6 +26,7 @@ public:
 
 private:
     QSize _size = QSize(300, 200);
+    Qt::Alignment _alignment = Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop;
 };
 
 #endif // PAINTER_H

@@ -24,12 +24,14 @@ void Painter::paint(QPainter *painter)
     painter->save();
 
     const QString text("Hello world!");
-    const auto metrics = painter->fontMetrics().boundingRect(text);
+//    const auto metrics = painter->fontMetrics().boundingRect(text);
 
-    painter->setClipRect(QRect(0, 0, _size.width(), _size.height()));
-    painter->drawText(QPoint((_size.width() - metrics.width()) * .5,
-                             (_size.height() - metrics.height()) * .5),
-                      text);
+    const auto mainRect = QRect(0, 0, _size.width(), _size.height());
+    painter->setClipRect(mainRect);
+//    painter->drawText(QPoint((_size.width() - metrics.width()) * .5,
+//                             (_size.height() - metrics.height()) * .5),
+//                      text);
+    painter->drawText(mainRect, _alignment, text);
 
     painter->restore();
 }
