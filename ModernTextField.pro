@@ -1,11 +1,13 @@
 QT = core gui widgets qml quick quickwidgets
 
 HEADERS = mainwindow.h \
+    block.h \
     moderntextfield.h \
     moderntextfieldwidget.h \
     painter.h
 
 SOURCES = main.cpp \
+    block.cpp \
     mainwindow.cpp \
     moderntextfield.cpp \
     moderntextfieldwidget.cpp \
