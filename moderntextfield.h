@@ -16,6 +16,9 @@ public:
 
     void paint(QPainter *painter) override;
 
+protected:
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
 private:
     QPointer<Painter> _painter;
 };

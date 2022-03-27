@@ -14,3 +14,8 @@ void ModernTextField::paint(QPainter *painter)
     _painter->setSize(boundingRect().size().toSize());
     _painter->paint(painter);
 }
+
+void ModernTextField::mouseReleaseEvent(QMouseEvent *event)
+{
+    _painter->mouseReleaseEvent(event);
+}

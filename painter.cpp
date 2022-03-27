@@ -1,6 +1,7 @@
 #include "painter.h"
 
 #include <QPainter>
+#include <QMouseEvent>
 
 #include <QDebug>
 
@@ -16,6 +17,8 @@ Painter::Painter(QObject *parent) : QObject(parent)
 
 void Painter::paint(QPainter *painter)
 {
+    // TODO: after painting, save result as image?
+
     painter->save();
 
     const auto mainRect = QRect(0, 0, _size.width(), _size.height());
@@ -34,10 +37,15 @@ void Painter::paint(QPainter *painter)
         if (column + block.size().width() > mainRect.width()) {
             const auto chunks = block.split(mainRect.width() - column);
 
+            removeClickableBlock(block);
+
             _blocks.replace(i, chunks.first);
             _blocks.insert(i + 1, chunks.second);
 
-            drawText(column, line, mainRect, _alignment, chunks.first, painter);
+            const auto region = drawText(column, line, mainRect, _alignment,
+                                         chunks.first, painter);
+
+            addClickableBlock(region, chunks.first);
 
             // Line break!
             line += block.size().height();
@@ -45,7 +53,10 @@ void Painter::paint(QPainter *painter)
             continue;
         }
 
-        drawText(column, line, mainRect, _alignment, block, painter);
+        const auto region = drawText(column, line, mainRect, _alignment, block,
+                                     painter);
+
+        addClickableBlock(region, block);
 
         column += block.size().width();
     }
@@ -73,7 +84,19 @@ void Painter::setAlignment(const Qt::Alignment &newAlignment)
     _alignment = newAlignment;
 }
 
-void Painter::drawText(const int column, const int line,
+void Painter::mouseReleaseEvent(QMouseEvent *event)
+{
+    for (const auto &blockRegion : qAsConst(_clickable)) {
+        if (blockRegion.paintedRectangle.contains(event->pos())) {
+            event->setAccepted(true);
+            qDebug() << "Clicked! Please go to:"
+                     << blockRegion.block.linkDestination;
+            emit clicked(blockRegion.block.linkDestination);
+        }
+    }
+}
+
+QRect Painter::drawText(const int column, const int line,
                        const QRect &rectangle,
                        const Qt::Alignment alignment,
                        const Block &block,
@@ -87,7 +110,27 @@ void Painter::drawText(const int column, const int line,
         painter->setPen(pen);
     }
 
-    painter->drawText(column, line,
-                      rectangle.width() - column, rectangle.height() - line,
-                      alignment, block.text);
+    const QRect result = QRect(column, line, rectangle.width() - column,
+                               rectangle.height() - line);
+
+    painter->drawText(result, alignment, block.text);
+
+    return result;
+}
+
+void Painter::addClickableBlock(const QRect &rectangle, const Block &block)
+{
+    if (block.types.testFlag(Block::Type::Link)) {
+        _clickable.append({ block, rectangle });
+    }
+}
+
+void Painter::removeClickableBlock(const Block &block)
+{
+    for (qsizetype i = 0; i < _clickable.size(); ++i) {
+        if (_clickable.at(i).block == block) {
+            _clickable.removeAt(i);
+            return;
+        }
+    }
 }

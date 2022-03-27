@@ -44,6 +44,14 @@ const QColor &Block::color() const
     return _color;
 }
 
+bool Block::operator==(const Block &other) const
+{
+    return types == other.types && text == other.text
+            && linkDestination == other.linkDestination
+            && size() == other.size() && font() == other.font()
+            && color() == other.color();
+}
+
 void Block::compute()
 {
     computeFont();

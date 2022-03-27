@@ -8,7 +8,7 @@
 #include <QColor>
 #include <QUrl>
 
-struct Block
+class Block
 {
     Q_GADGET
 
@@ -41,9 +41,15 @@ public:
 
     QPair<Block, Block> split(const int where) const;
 
+    // TODO: add merge() method to merge chunks when widget grows. It should
+    // merge together blocks which have the same properties and which are
+    // adjacent
+
     const QSize &size() const;
     const QFont &font() const;
     const QColor &color() const;
+
+    bool operator==(const Block &other) const;
 
 private:
     void compute();

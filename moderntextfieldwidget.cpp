@@ -31,3 +31,8 @@ void ModernTextFieldWidget::resizeEvent(QResizeEvent *event)
     _painter->setSize(event->size());
     QWidget::resizeEvent(event);
 }
+
+void ModernTextFieldWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    _painter->mouseReleaseEvent(event);
+}
