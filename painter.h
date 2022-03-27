@@ -35,6 +35,10 @@ public:
     bool removeString(const int from, const int to = -1);
 
 private:
+    void drawText(const int column, const int line, const QRect &rectangle,
+                  const Qt::Alignment alignment, const Block &block,
+                  QPainter *painter) const;
+
     QSize _size = QSize(300, 200);
     Qt::Alignment _alignment = Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop;
 

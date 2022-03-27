@@ -9,7 +9,8 @@ Painter::Painter(QObject *parent) : QObject(parent)
     _blocks = {
         { Block::Type::Text, "Hello world! " },
         { Block::Type::Text | Block::Type::Bold, "Bold world, too! " },
-        { Block::Type::Text | Block::Type::Italic, "Here, have some italics, mate." }
+        { Block::Type::Text | Block::Type::Italic, "Here, have some italics, mate. " },
+        { Block::Type::Text | Block::Type::Link, "And this is a link.", QUrl("https://www.google.com") },
     };
 }
 
@@ -36,12 +37,7 @@ void Painter::paint(QPainter *painter)
             _blocks.replace(i, chunks.first);
             _blocks.insert(i + 1, chunks.second);
 
-            painter->setFont(chunks.first.font());
-
-            painter->drawText(column, line,
-                              mainRect.width() - column, mainRect.height() - line,
-                              _alignment, chunks.first.text);
-
+            drawText(column, line, mainRect, _alignment, chunks.first, painter);
 
             // Line break!
             line += block.size().height();
@@ -49,11 +45,7 @@ void Painter::paint(QPainter *painter)
             continue;
         }
 
-        painter->setFont(block.font());
-
-        painter->drawText(column, line,
-                          mainRect.width() - column, mainRect.height() - line,
-                          _alignment, block.text);
+        drawText(column, line, mainRect, _alignment, block, painter);
 
         column += block.size().width();
     }
@@ -79,4 +71,23 @@ Qt::Alignment Painter::alignment() const
 void Painter::setAlignment(const Qt::Alignment &newAlignment)
 {
     _alignment = newAlignment;
+}
+
+void Painter::drawText(const int column, const int line,
+                       const QRect &rectangle,
+                       const Qt::Alignment alignment,
+                       const Block &block,
+                       QPainter *painter) const
+{
+    painter->setFont(block.font());
+
+    if (const auto &color = block.color(); color != painter->pen().color()) {
+        auto pen = painter->pen();
+        pen.setColor(block.color());
+        painter->setPen(pen);
+    }
+
+    painter->drawText(column, line,
+                      rectangle.width() - column, rectangle.height() - line,
+                      alignment, block.text);
 }

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QFlag>
 #include <QSize>
+#include <QFont>
+#include <QColor>
 #include <QUrl>
 
 struct Block
@@ -27,26 +29,30 @@ public:
     Q_DECLARE_FLAGS(Types, Type)
     Q_FLAG(Types)
 
+    Block (const Types types_, const QString &text_);
+
+    Block (const Types types_, const QString &text_, const QUrl &url);
+
     Types types = Type::None;
     bool showThumbnail = true;
 
-    QUrl linkDestination;
     QString text;
+    QUrl linkDestination;
 
     QPair<Block, Block> split(const int where) const;
 
     const QSize &size() const;
-    QFont font() const;
-
-    Block (const Types types_, const QString &text_) : types(types_), text(text_)
-    {
-        compute();
-    }
+    const QFont &font() const;
+    const QColor &color() const;
 
 private:
     void compute();
+    void computeFont();
+    void computeColor();
 
     QSize _size;
+    QFont _font;
+    QColor _color;
 };
 
  Q_DECLARE_OPERATORS_FOR_FLAGS(Block::Types)
