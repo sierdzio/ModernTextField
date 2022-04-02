@@ -26,7 +26,7 @@ void Painter::paint(QPainter *painter)
     int line = 0;
     int column = 0;
     for (qsizetype blockIndex = 0; blockIndex < _blocks.size(); ++blockIndex) {
-        const auto &block = _blocks.at(blockIndex);
+        auto block = _blocks.at(blockIndex);
 
         for (qsizetype chunkIndex = 0; chunkIndex < block.chunks().size(); ++chunkIndex) {
             if (column + 5 >= mainRect.width()) {
@@ -37,35 +37,24 @@ void Painter::paint(QPainter *painter)
 
             // TODO: fix to include blocks last chunk width, not the width
             // of the entire block
-            if (column + block.size().width() > mainRect.width()) {
-                auto newBlock = block;
-                newBlock.split(chunkIndex, mainRect.width() - column);
-                _blocks.replace(blockIndex, newBlock);
+            if (column + block.chunk(chunkIndex).width > mainRect.width()) {
+                block.split(chunkIndex, mainRect.width() - column);
+                _blocks.replace(blockIndex, block);
 
-                // TODO: fix
-//                removeClickableBlock(block);
-
-//                _blocks.replace(i, chunks.first);
-//                _blocks.insert(i + 1, chunks.second);
-
-                /*const auto region =*/ drawText(column, line, mainRect, _alignment,
-                                             newBlock, chunkIndex, painter);
-
-                // TODO: fix
-//                addClickableBlock(region, chunks.first);
+                drawText(column, line, mainRect, _alignment,
+                         block, chunkIndex, painter);
 
                 // Line break!
+                // TODO: get the highest block from this line!
                 line += block.size().height();
                 column = 0;
                 continue;
             }
 
-            const auto region = drawText(column, line, mainRect, _alignment, block,
-                                         0, painter);
+            drawText(column, line, mainRect, _alignment, block, chunkIndex,
+                     painter);
 
-            addClickableBlock(region, block);
-
-            column += block.size().width();
+            column += block.chunk(chunkIndex).width;
         }
     }
 
@@ -94,12 +83,29 @@ void Painter::setAlignment(const Qt::Alignment &newAlignment)
 
 void Painter::mouseReleaseEvent(QMouseEvent *event)
 {
-    for (const auto &blockRegion : qAsConst(_clickable)) {
-        if (blockRegion.paintedRectangle.contains(event->pos())) {
-            event->setAccepted(true);
-            qDebug() << "Clicked! Please go to:"
-                     << blockRegion.block.linkDestination;
-            emit clicked(blockRegion.block.linkDestination);
+    int x = 0;
+    int y = 0;
+    const auto width = _size.width();
+
+    for (const auto &block : qAsConst(_blocks)) {
+        for (const auto &chunk : block.chunks()) {
+            if (block.linkDestination.isEmpty() == false) {
+                const QRect region(x, y, chunk.width, block.size().height());
+
+                if (region.contains(event->pos())) {
+                    event->setAccepted(true);
+                    qDebug() << "Clicked! Please go to:"
+                             << block.linkDestination;
+                    emit clicked(block.linkDestination);
+                }
+            }
+
+            if ((x + chunk.width) > width) {
+                x = 0;
+                y += block.size().height();
+            } else {
+                x += chunk.width;
+            }
         }
     }
 }
@@ -125,21 +131,4 @@ QRect Painter::drawText(const int column, const int line,
     painter->drawText(result, alignment, block.chunk(chunkIndex).text);
 
     return result;
-}
-
-void Painter::addClickableBlock(const QRect &rectangle, const Block &block)
-{
-    if (block.types.testFlag(Block::Type::Link)) {
-        _clickable.append({ block, rectangle });
-    }
-}
-
-void Painter::removeClickableBlock(const Block &block)
-{
-    for (qsizetype i = 0; i < _clickable.size(); ++i) {
-        if (_clickable.at(i).block == block) {
-            _clickable.removeAt(i);
-            return;
-        }
-    }
 }

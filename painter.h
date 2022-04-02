@@ -10,13 +10,6 @@
 class QPainter;
 class QMouseEvent;
 
-struct BlockRegion
-{
-    Block block;
-    // TODO: QList of rectangles representing all chunks
-    QRect paintedRectangle;
-};
-
 class Painter : public QObject
 {
     Q_OBJECT
@@ -58,14 +51,10 @@ private:
                    const Block &block, const int chunkIndex,
                    QPainter *painter) const;
 
-    void addClickableBlock(const QRect &rectangle, const Block &block);
-    void removeClickableBlock(const Block &block);
-
     QSize _size = QSize(300, 200);
     Qt::Alignment _alignment = Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop;
 
     QList<Block> _blocks;
-    QList<BlockRegion> _clickable;
 };
 
 #endif // PAINTER_H

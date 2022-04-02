@@ -17,17 +17,22 @@ Block::Block(const Types types_, const QString &text_, const QUrl &url)
 
 void Block::split(const int chunkIndex, const int where)
 {
-    const auto current = _chunks.takeAt(chunkIndex);
+    const auto current = _chunks.at(chunkIndex);
     const int index = where * current.text.length() / current.width;
 
     Chunk left, right;
-    left.text = text.left(index);
+    left.text = current.text.left(index);
     left.width = computeChunkWidth(left);
+    _chunks.replace(chunkIndex, left);
 
-    right.text = text.mid(index);
+    right.text = current.text.mid(index);
+
+    // TODO: this can be optimized using whole text of a block
+    for (qsizetype i = chunkIndex + 1; i < _chunks.size();) {
+        right.text.append(_chunks.takeAt(i).text);
+    }
+
     right.width = computeChunkWidth(right);
-
-    _chunks.insert(chunkIndex, left);
     _chunks.insert(chunkIndex + 1, right);
 }
 
