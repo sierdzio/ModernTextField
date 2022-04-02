@@ -13,6 +13,7 @@ class QMouseEvent;
 struct BlockRegion
 {
     Block block;
+    // TODO: QList of rectangles representing all chunks
     QRect paintedRectangle;
 };
 
@@ -53,7 +54,8 @@ protected:
 
 private:
     QRect drawText(const int column, const int line, const QRect &rectangle,
-                   const Qt::Alignment alignment, const Block &block,
+                   const Qt::Alignment alignment,
+                   const Block &block, const int chunkIndex,
                    QPainter *painter) const;
 
     void addClickableBlock(const QRect &rectangle, const Block &block);

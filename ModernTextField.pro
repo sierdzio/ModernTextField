@@ -1,5 +1,9 @@
 QT = core gui widgets qml quick quickwidgets
 
+unix {
+    QMAKE_CXXFLAGS += -Werror
+}
+
 HEADERS = mainwindow.h \
     block.h \
     moderntextfield.h \

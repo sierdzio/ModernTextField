@@ -8,6 +8,11 @@
 #include <QColor>
 #include <QUrl>
 
+struct Chunk {
+    QString text;
+    int width = -1;
+};
+
 class Block
 {
     Q_GADGET
@@ -39,13 +44,11 @@ public:
     QString text;
     QUrl linkDestination;
 
-    QPair<Block, Block> split(const int where) const;
-
-    // TODO: add merge() method to merge chunks when widget grows. It should
-    // merge together blocks which have the same properties and which are
-    // adjacent
+    void split(const int chunkIndex, const int where);
 
     const QSize &size() const;
+    const QList<Chunk> &chunks() const;
+    const Chunk &chunk(const int index) const;
     const QFont &font() const;
     const QColor &color() const;
 
@@ -56,7 +59,11 @@ private:
     void computeFont();
     void computeColor();
 
+    int computeChunkWidth(const Chunk &chunk) const;
+
     QSize _size;
+    QList<Chunk> _chunks;
+
     QFont _font;
     QColor _color;
 };

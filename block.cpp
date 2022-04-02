@@ -15,23 +15,35 @@ Block::Block(const Types types_, const QString &text_, const QUrl &url)
     compute();
 }
 
-QPair<Block, Block> Block::split(const int where) const
+void Block::split(const int chunkIndex, const int where)
 {
-    Block first(*this), second(*this);
+    const auto current = _chunks.takeAt(chunkIndex);
+    const int index = where * current.text.length() / current.width;
 
-    const int index = where * text.length() / size().width();
+    Chunk left, right;
+    left.text = text.left(index);
+    left.width = computeChunkWidth(left);
 
-    first.text = text.left(index);
-    first.compute();
-    second.text = text.mid(index);
-    second.compute();
+    right.text = text.mid(index);
+    right.width = computeChunkWidth(right);
 
-    return { first, second };
+    _chunks.insert(chunkIndex, left);
+    _chunks.insert(chunkIndex + 1, right);
 }
 
 const QSize &Block::size() const
 {
     return _size;
+}
+
+const QList<Chunk> &Block::chunks() const
+{
+    return _chunks;
+}
+
+const Chunk &Block::chunk(const int index) const
+{
+    return _chunks.at(index);
 }
 
 const QFont &Block::font() const
@@ -61,6 +73,7 @@ void Block::compute()
         const QFontMetrics metrics(font());
 
         _size = metrics.boundingRect(0, 0, 1000, 1000, Qt::AlignLeft | Qt::AlignTop, text).size();
+        _chunks.append({ text, _size.width() });
     }
 }
 
@@ -92,4 +105,13 @@ void Block::computeColor()
     }
 
     _color = QColor(0, 0, 0);
+}
+
+int Block::computeChunkWidth(const Chunk &chunk) const
+{
+    const QFontMetrics metrics(font());
+    const auto size = metrics.boundingRect(0, 0, 1000, 1000,
+                                           Qt::AlignLeft | Qt::AlignTop,
+                                           chunk.text).size();
+    return size.width();
 }

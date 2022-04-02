@@ -25,40 +25,48 @@ void Painter::paint(QPainter *painter)
 
     int line = 0;
     int column = 0;
-    for (qsizetype i = 0; i < _blocks.size(); ++i) {
-        const auto &block = _blocks.at(i);
+    for (qsizetype blockIndex = 0; blockIndex < _blocks.size(); ++blockIndex) {
+        const auto &block = _blocks.at(blockIndex);
 
-        if (column + 5 >= mainRect.width()) {
-            // Line break!
-            line += block.size().height();
-            column = 0;
+        for (qsizetype chunkIndex = 0; chunkIndex < block.chunks().size(); ++chunkIndex) {
+            if (column + 5 >= mainRect.width()) {
+                // Line break!
+                line += block.size().height();
+                column = 0;
+            }
+
+            // TODO: fix to include blocks last chunk width, not the width
+            // of the entire block
+            if (column + block.size().width() > mainRect.width()) {
+                auto newBlock = block;
+                newBlock.split(chunkIndex, mainRect.width() - column);
+                _blocks.replace(blockIndex, newBlock);
+
+                // TODO: fix
+//                removeClickableBlock(block);
+
+//                _blocks.replace(i, chunks.first);
+//                _blocks.insert(i + 1, chunks.second);
+
+                /*const auto region =*/ drawText(column, line, mainRect, _alignment,
+                                             newBlock, chunkIndex, painter);
+
+                // TODO: fix
+//                addClickableBlock(region, chunks.first);
+
+                // Line break!
+                line += block.size().height();
+                column = 0;
+                continue;
+            }
+
+            const auto region = drawText(column, line, mainRect, _alignment, block,
+                                         0, painter);
+
+            addClickableBlock(region, block);
+
+            column += block.size().width();
         }
-
-        if (column + block.size().width() > mainRect.width()) {
-            const auto chunks = block.split(mainRect.width() - column);
-
-            removeClickableBlock(block);
-
-            _blocks.replace(i, chunks.first);
-            _blocks.insert(i + 1, chunks.second);
-
-            const auto region = drawText(column, line, mainRect, _alignment,
-                                         chunks.first, painter);
-
-            addClickableBlock(region, chunks.first);
-
-            // Line break!
-            line += block.size().height();
-            column = 0;
-            continue;
-        }
-
-        const auto region = drawText(column, line, mainRect, _alignment, block,
-                                     painter);
-
-        addClickableBlock(region, block);
-
-        column += block.size().width();
     }
 
     painter->restore();
@@ -97,10 +105,11 @@ void Painter::mouseReleaseEvent(QMouseEvent *event)
 }
 
 QRect Painter::drawText(const int column, const int line,
-                       const QRect &rectangle,
-                       const Qt::Alignment alignment,
-                       const Block &block,
-                       QPainter *painter) const
+                        const QRect &rectangle,
+                        const Qt::Alignment alignment,
+                        const Block &block,
+                        const int chunkIndex,
+                        QPainter *painter) const
 {
     painter->setFont(block.font());
 
@@ -113,7 +122,7 @@ QRect Painter::drawText(const int column, const int line,
     const QRect result = QRect(column, line, rectangle.width() - column,
                                rectangle.height() - line);
 
-    painter->drawText(result, alignment, block.text);
+    painter->drawText(result, alignment, block.chunk(chunkIndex).text);
 
     return result;
 }
