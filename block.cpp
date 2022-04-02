@@ -26,14 +26,28 @@ void Block::split(const int chunkIndex, const int where)
     _chunks.replace(chunkIndex, left);
 
     right.text = current.text.mid(index);
+    right.width = computeChunkWidth(right);
 
-    // TODO: this can be optimized using whole text of a block
-    for (qsizetype i = chunkIndex + 1; i < _chunks.size();) {
-        right.text.append(_chunks.takeAt(i).text);
+    const int rightIndex = chunkIndex + 1;
+    _chunks.insert(rightIndex, right);
+
+    merge(rightIndex, _chunks.size() - chunkIndex - 2);
+}
+
+void Block::merge(const int chunkIndex, const int chunkCount)
+{
+    if (chunkIndex >= _chunks.size() - 1) {
+        return;
     }
 
-    right.width = computeChunkWidth(right);
-    _chunks.insert(chunkIndex + 1, right);
+    Chunk chunk;
+
+    for (qsizetype i = chunkIndex; i < chunkIndex + chunkCount && i < _chunks.size(); ++i) {
+        chunk.text.append(_chunks.takeAt(chunkIndex).text);
+    }
+
+    chunk.width = computeChunkWidth(chunk);
+    _chunks.insert(chunkIndex, chunk);
 }
 
 const QSize &Block::size() const

@@ -35,8 +35,7 @@ void Painter::paint(QPainter *painter)
                 column = 0;
             }
 
-            // TODO: fix to include blocks last chunk width, not the width
-            // of the entire block
+            // If current chunk does not fit, split it!
             if (column + block.chunk(chunkIndex).width > mainRect.width()) {
                 block.split(chunkIndex, mainRect.width() - column);
                 _blocks.replace(blockIndex, block);
@@ -49,6 +48,19 @@ void Painter::paint(QPainter *painter)
                 line += block.size().height();
                 column = 0;
                 continue;
+            }
+
+            // If current and next chunk will fit, merge them!
+            int checkIndex = chunkIndex;
+            int amountToMerge = 0;
+            while (checkIndex < block.chunks().size() && column + block.chunk(checkIndex).width <= mainRect.width()) {
+                ++checkIndex;
+                ++amountToMerge;
+            }
+
+            if (amountToMerge > 0) {
+                block.merge(chunkIndex, amountToMerge);
+                _blocks.replace(blockIndex, block);
             }
 
             drawText(column, line, mainRect, _alignment, block, chunkIndex,
@@ -95,7 +107,8 @@ void Painter::mouseReleaseEvent(QMouseEvent *event)
                 if (region.contains(event->pos())) {
                     event->setAccepted(true);
                     qDebug() << "Clicked! Please go to:"
-                             << block.linkDestination;
+                             << block.linkDestination
+                             << event->pos() << region;
                     emit clicked(block.linkDestination);
                 }
             }

@@ -45,6 +45,7 @@ public:
     QUrl linkDestination;
 
     void split(const int chunkIndex, const int where);
+    void merge(const int chunkIndex, const int chunkCount);
 
     const QSize &size() const;
     const QList<Chunk> &chunks() const;
