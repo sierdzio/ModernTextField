@@ -107,7 +107,7 @@ void Block::computeFont()
         font.setItalic(true);
     }
 
-    if (types.testFlag(Type::Link)) {
+    if (types.testFlag(Type::Link) || types.testFlag(Type::Underline)) {
         font.setUnderline(true);
     }
 

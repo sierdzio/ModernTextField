@@ -13,7 +13,8 @@ Painter::Painter(QObject *parent) : QObject(parent)
         { Block::Type::Text | Block::Type::Italic, "Here, have some italics, mate. " },
         { Block::Type::Text | Block::Type::Link, "And this is a link.", QUrl("https://www.google.com") },
         { Block::Type::Text | Block::Type::Strikethrough, " This will be crossed out. " },
-        { Block::Type::Text | Block::Type::Strikethrough | Block::Type::Bold | Block::Type::Italic,
+        { Block::Type::Text | Block::Type::Strikethrough | Block::Type::Bold
+          | Block::Type::Italic | Block::Type::Underline,
           " Massive combination! " },
     };
 
