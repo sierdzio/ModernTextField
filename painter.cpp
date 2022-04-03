@@ -83,7 +83,9 @@ void Painter::drawText(const Block &block,
                        const Qt::Alignment alignment,
                        QPainter *painter) const
 {
-    painter->setFont(block.font());
+    if (painter->font() != block.font()) {
+        painter->setFont(block.font());
+    }
 
     if (const auto &color = block.color(); color != painter->pen().color()) {
         auto pen = painter->pen();
@@ -119,7 +121,6 @@ void Painter::recalculate()
             // If current chunk does not fit, split it!
             if (column + chunk.size.width() > mainRect.width()) {
                 block.split(chunkIndex, mainRect.width() - column);
-                _blocks.replace(blockIndex, block);
 
                 // Line break!
                 // TODO: get the highest block from this line!
@@ -128,9 +129,9 @@ void Painter::recalculate()
                 continue;
             }
 
-            _blocks.replace(blockIndex, block);
-
             column += chunk.size.width();
         }
+
+        _blocks.replace(blockIndex, block);
     }
 }

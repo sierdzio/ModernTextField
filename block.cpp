@@ -27,6 +27,7 @@ void Block::split(const int chunkIndex, const int where)
 
     Chunk left, right;
     left.text = current.text.left(index);
+    left.position = current.position;
     left.size = computeChunkSize(left);
     _chunks.replace(chunkIndex, left);
 
