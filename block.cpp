@@ -111,6 +111,10 @@ void Block::computeFont()
         font.setUnderline(true);
     }
 
+    if (types.testFlag(Type::Strikethrough)) {
+        font.setStrikeOut(true);
+    }
+
     _font = font;
 }
 
