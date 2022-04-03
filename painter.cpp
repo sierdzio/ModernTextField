@@ -13,69 +13,19 @@ Painter::Painter(QObject *parent) : QObject(parent)
         { Block::Type::Text | Block::Type::Italic, "Here, have some italics, mate. " },
         { Block::Type::Text | Block::Type::Link, "And this is a link.", QUrl("https://www.google.com") },
     };
+
+    recalculate();
 }
 
-void Painter::paint(QPainter *painter)
+void Painter::paint(QPainter *painter) const
 {
     // TODO: after painting, save result as image?
 
     painter->save();
 
-    const auto mainRect = QRect(0, 0, _size.width(), _size.height());
-
-    int line = 0;
-    int column = 0;
-    for (qsizetype blockIndex = 0; blockIndex < _blocks.size(); ++blockIndex) {
-        auto block = _blocks.at(blockIndex);
-
-        for (qsizetype chunkIndex = 0; chunkIndex < block.chunks().size(); ++chunkIndex) {
-            if (column + 5 >= mainRect.width()) {
-                // Line break!
-                line += block.size().height();
-                column = 0;
-            }
-
-            // If current chunk does not fit, split it!
-            if (column + block.chunk(chunkIndex).width > mainRect.width()) {
-                block.split(chunkIndex, mainRect.width() - column);
-                _blocks.replace(blockIndex, block);
-
-                drawText(column, line, mainRect, _alignment,
-                         block, chunkIndex, painter);
-
-                // Line break!
-                // TODO: get the highest block from this line!
-                line += block.size().height();
-                column = 0;
-                continue;
-            }
-
-            // If current and next chunks will fit, merge them!
-            int amountToMerge = -1;
-
-            {
-                int checkIndex = chunkIndex;
-                int checkColumn = column;
-                while (checkIndex < block.chunks().size()
-                       && (checkColumn + block.chunk(checkIndex).width) <= mainRect.width())
-                {
-                    checkColumn += block.chunk(checkIndex).width;
-                    ++checkIndex;
-                    ++amountToMerge;
-                }
-            }
-
-            if (amountToMerge > 0) {
-                block.merge(chunkIndex, amountToMerge);
-                _blocks.replace(blockIndex, block);
-
-                // TODO: this might be the place to... split the last chunk again!
-            }
-
-            drawText(column, line, mainRect, _alignment, block, chunkIndex,
-                     painter);
-
-            column += block.chunk(chunkIndex).width;
+    for (const auto &block : qAsConst(_blocks)) {
+        for (const auto &chunk : block.chunks()) {
+            drawText(block, chunk, _alignment, painter);
         }
     }
 
@@ -89,7 +39,10 @@ const QSize &Painter::size() const
 
 void Painter::setSize(const QSize &newSize)
 {
-    _size = newSize;
+    if (_size != newSize) {
+        _size = newSize;
+        recalculate();
+    }
 }
 
 Qt::Alignment Painter::alignment() const
@@ -99,46 +52,36 @@ Qt::Alignment Painter::alignment() const
 
 void Painter::setAlignment(const Qt::Alignment &newAlignment)
 {
-    _alignment = newAlignment;
+    if (_alignment != newAlignment) {
+        _alignment = newAlignment;
+        recalculate();
+    }
 }
 
-void Painter::mouseReleaseEvent(QMouseEvent *event)
+void Painter::mouseReleaseEvent(QMouseEvent *event) const
 {
-    int x = 0;
-    int y = 0;
-    const auto width = _size.width();
-
     for (const auto &block : qAsConst(_blocks)) {
         for (const auto &chunk : block.chunks()) {
             if (block.linkDestination.isEmpty() == false) {
-                const QRect region(x, y, chunk.width, block.size().height());
+                const QRect region(chunk.position, chunk.size);
+
+                //qDebug() << "Chunk region" << event->pos() << region << chunk.text;
 
                 if (region.contains(event->pos())) {
                     event->setAccepted(true);
                     qDebug() << "Clicked! Please go to:"
-                             << block.linkDestination
-                             << event->pos() << region
-                             << chunk.text;
+                             << block.linkDestination;
                     emit clicked(block.linkDestination);
                 }
-            }
-
-            if ((x + chunk.width) > width) {
-                x = 0;
-                y += block.size().height();
-            } else {
-                x += chunk.width;
             }
         }
     }
 }
 
-QRect Painter::drawText(const int column, const int line,
-                        const QRect &rectangle,
-                        const Qt::Alignment alignment,
-                        const Block &block,
-                        const int chunkIndex,
-                        QPainter *painter) const
+void Painter::drawText(const Block &block,
+                       const Chunk &chunk,
+                       const Qt::Alignment alignment,
+                       QPainter *painter) const
 {
     painter->setFont(block.font());
 
@@ -148,10 +91,46 @@ QRect Painter::drawText(const int column, const int line,
         painter->setPen(pen);
     }
 
-    const QRect result = QRect(column, line, rectangle.width() - column,
-                               rectangle.height() - line);
+    painter->drawText(QRect(chunk.position, chunk.size), alignment, chunk.text);
+}
 
-    painter->drawText(result, alignment, block.chunk(chunkIndex).text);
+void Painter::recalculate()
+{
+    const auto mainRect = QRect(0, 0, _size.width(), _size.height());
 
-    return result;
+    int line = 0;
+    int column = 0;
+
+    for (qsizetype blockIndex = 0; blockIndex < _blocks.size(); ++blockIndex) {
+        auto block = _blocks.at(blockIndex);
+        block.clearChunks();
+
+        for (qsizetype chunkIndex = 0; chunkIndex < block.chunks().size(); ++chunkIndex) {
+            const auto &chunk = block.chunk(chunkIndex);
+
+            if (column + 5 >= mainRect.width()) {
+                // Line break!
+                line += chunk.size.height();
+                column = 0;
+            }
+
+            block.updateChunkPosition(chunkIndex, QPoint(column, line));
+
+            // If current chunk does not fit, split it!
+            if (column + chunk.size.width() > mainRect.width()) {
+                block.split(chunkIndex, mainRect.width() - column);
+                _blocks.replace(blockIndex, block);
+
+                // Line break!
+                // TODO: get the highest block from this line!
+                line += chunk.size.height();
+                column = 0;
+                continue;
+            }
+
+            _blocks.replace(blockIndex, block);
+
+            column += chunk.size.width();
+        }
+    }
 }

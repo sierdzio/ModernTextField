@@ -27,7 +27,7 @@ public:
 
     explicit Painter(QObject *parent = nullptr);
 
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) const;
 
     const QSize &size() const;
     void setSize(const QSize &newSize);
@@ -43,13 +43,14 @@ signals:
     void clicked(const QUrl &url) const;
 
 protected:
-    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event) const;
 
 private:
-    QRect drawText(const int column, const int line, const QRect &rectangle,
-                   const Qt::Alignment alignment,
-                   const Block &block, const int chunkIndex,
-                   QPainter *painter) const;
+    void drawText(const Block &block, const Chunk &chunk,
+                  const Qt::Alignment alignment,
+                  QPainter *painter) const;
+
+    void recalculate();
 
     QSize _size = QSize(300, 200);
     Qt::Alignment _alignment = Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop;

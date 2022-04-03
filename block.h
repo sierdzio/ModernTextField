@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QFlag>
+#include <QPoint>
 #include <QSize>
 #include <QFont>
 #include <QColor>
@@ -10,12 +11,17 @@
 
 struct Chunk {
     QString text;
-    int width = -1;
+    QPoint position;
+    QSize size;
+
+    bool operator==(const Chunk &other) const;
 };
 
 class Block
 {
     Q_GADGET
+
+    friend class Painter;
 
 public:
     enum Type {
@@ -35,7 +41,6 @@ public:
     Q_FLAG(Types)
 
     Block (const Types types_, const QString &text_);
-
     Block (const Types types_, const QString &text_, const QUrl &url);
 
     Types types = Type::None;
@@ -45,11 +50,12 @@ public:
     QUrl linkDestination;
 
     void split(const int chunkIndex, const int where);
-    void merge(const int chunkIndex, const int chunkCount);
 
-    const QSize &size() const;
     const QList<Chunk> &chunks() const;
     const Chunk &chunk(const int index) const;
+    void updateChunkPosition(const int index, const QPoint &position);
+    void clearChunks();
+
     const QFont &font() const;
     const QColor &color() const;
 
@@ -59,16 +65,16 @@ private:
     void compute();
     void computeFont();
     void computeColor();
+    void computeDefaultChunk();
 
-    int computeChunkWidth(const Chunk &chunk) const;
+    QSize computeChunkSize(const Chunk &chunk) const;
 
-    QSize _size;
     QList<Chunk> _chunks;
 
     QFont _font;
     QColor _color;
 };
 
- Q_DECLARE_OPERATORS_FOR_FLAGS(Block::Types)
+Q_DECLARE_OPERATORS_FOR_FLAGS(Block::Types)
 
 #endif // BLOCK_H
