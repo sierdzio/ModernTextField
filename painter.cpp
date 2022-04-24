@@ -16,6 +16,7 @@ Painter::Painter(QObject *parent) : QObject(parent)
         { Block::Type::Text | Block::Type::Strikethrough | Block::Type::Bold
           | Block::Type::Italic | Block::Type::Underline,
           " Massive combination! " },
+        { Block::Type::Text | Block::Type::Emoji, "😀 " },
     };
 
     recalculate();
